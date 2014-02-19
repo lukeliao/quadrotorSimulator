@@ -100,7 +100,6 @@ for d = 1:3
     acc(d,:) = 20*coeffs(1)*tv.^3 + 12*coeffs(2)*tv.^2 + 6*coeffs(3)*tv + 2*coeffs(4);
 end
 max_a = max(rownorm(acc'));
-% keyboard
 end
 
 function n = rownorm(v)
@@ -127,7 +126,7 @@ function cond_traj = condense_traj(map, path)
         shortcut = [linspace(ref(1), path(i,1), npoints)', ...
                     linspace(ref(2), path(i,2), npoints)', ...
                     linspace(ref(3), path(i,3), npoints)'];
-        if any(collide_body(map, shortcut))
+        if any(collide(map, shortcut))
             ref = path(i-1,:);
             cond_traj = [cond_traj; ref];
             npoints = 50;
@@ -137,6 +136,6 @@ function cond_traj = condense_traj(map, path)
         end
         npoints = npoints + 5;
     end
-%      plot3(cond_traj(:,1), cond_traj(:,2), cond_traj(:,3), 'c-')
+     plot3(cond_traj(:,1), cond_traj(:,2), cond_traj(:,3), 'c-')
 
 end

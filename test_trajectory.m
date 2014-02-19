@@ -103,7 +103,7 @@ for iter = 1:max_iter
         desired_state = trajhandle(time + cstep, qn);
         QP{qn}.UpdateQuadPlot(x{qn}, [desired_state.pos; desired_state.vel], time + cstep);
         % Check for collision
-        if collide(map, x{qn}(1:3))
+        if collide_body(map, x{qn}(1:3)')
             fprintf('Collision at %f, %f, %f \n', x{qn}(1), x{qn}(2), x{qn}(3))
         end
     end

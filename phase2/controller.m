@@ -62,7 +62,7 @@ if F > maxF
     error('Exceeding maximum thrust.');
 elseif F < minF
     error('Commanding negative thrust.');
-elseif any([phi_des theta_des] < maxangle)
+elseif any([phi_des theta_des] > maxangle)
     error('Exceeded Maximum Angle');
 end
 % =================== Your code ends here ===================

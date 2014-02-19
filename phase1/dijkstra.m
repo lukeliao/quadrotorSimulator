@@ -93,7 +93,7 @@ while true
        elseif any(pidx > max_i)
            continue;
        % Check if already neighbor
-       elseif isNeighbor(pidx(1), pidx(2), pidx(3)) == -1
+       elseif isNeighbor(pidx(1), pidx(2), pidx(3)) ~= -1
            continue;
        % Check if already visited 
        elseif ~isnan(visited(pidx(1), pidx(2), pidx(3), 1))
