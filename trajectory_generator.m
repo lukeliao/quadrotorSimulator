@@ -27,7 +27,7 @@ persistent coeffs
 % During first call
 if isempty(t)    
     % Defined pts for {robot, point, dimension}
-    avg_speed = 1; % m/s
+    avg_speed = 1.3; % m/s
     choose_time = cell(length(path), 1);
     for qn = 1:length(path)   
         % First see if we can condense the number of segments in the path 
@@ -50,7 +50,7 @@ if isempty(t)
                 % Map of times to decide which leg we're on
                 time_vec(s) = time_vec(s-1) + dt;
                 max_a = get_max_acc(coeffs{qn}{s-1}, dt);
-                if max_a > 4.5
+                if max_a > 5.5
                     avg_speed_temp = 0.8 * avg_speed_temp;
                     iter = iter + 1;
                 else
@@ -59,9 +59,9 @@ if isempty(t)
             end
         end
         % Smooth corners
-        new_path = stitch_traj(coeffs{qn}, time_vec);
-        coeffs{qn} = new_path.coeffs;
-        time_vec = new_path.tvec;
+%         new_path = stitch_traj(coeffs{qn}, time_vec);
+%         coeffs{qn} = new_path.coeffs;
+%         time_vec = new_path.tvec;
         % Save time for later
         choose_time{qn} = time_vec;
     end    
@@ -114,7 +114,7 @@ function new_path = stitch_traj(coeffs, tvec)
     all_states = {coeffs_to_state(coeffs{1}, 0)};
     all_times = tvec(1);
     dtvec = diff(tvec);
-    t_acc = 1.5; % Time of transitory parts
+    t_acc = 0.3; % Time of transitory parts
     for i = 1:length(tvec)-2
         % Make sure we don't fillet more than half of the length
         if min(dtvec(i), dtvec(i+1)) < t_acc

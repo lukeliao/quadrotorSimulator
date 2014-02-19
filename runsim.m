@@ -6,7 +6,7 @@ addpath(genpath('./'));
 %% Plan path
 disp('Planning ...');
 
-nmap = 3;
+nmap = 1;
 
 switch nmap
     case 0

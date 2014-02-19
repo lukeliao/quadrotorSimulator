@@ -58,13 +58,13 @@ ang_vel_error = [p_des q_des r_des]' - omega;
 M = kp_ang .* ang_error + kd_ang .* ang_vel_error;
 
 % Error if too much input
-if F > maxF
-    error('Exceeding maximum thrust.');
-elseif F < minF
-    error('Commanding negative thrust.');
-elseif any([phi_des theta_des] > maxangle)
-    error('Exceeded Maximum Angle');
-end
+% if F > maxF
+%     error('Exceeding maximum thrust.');
+% elseif F < minF
+%     error('Commanding negative thrust.');
+% elseif any([phi_des theta_des] > maxangle)
+%     error('Exceeded Maximum Angle');
+% end
 % =================== Your code ends here ===================
 
 % Output trpy and drpy as in hardware
