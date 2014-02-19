@@ -14,6 +14,9 @@ map.xy_res = xy_res;
 map.z_res = z_res;
 map.margin = margin;
 
+% Load size of quad to avoid path
+map.body_buffer = [0.15 0.15 0.05]; % m, from center
+
 %% Parse text file:
 
 fid = fopen(filename);

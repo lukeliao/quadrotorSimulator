@@ -16,7 +16,6 @@ kd_ang = .2*[1 1 0]';
 
 % Pull out params
 m = params.mass;
-I = params.I;
 g = params.grav;
 maxangle = params.maxangle;
 maxF = params.maxF;
@@ -58,11 +57,13 @@ ang_vel_error = [p_des q_des r_des]' - omega;
 
 M = kp_ang .* ang_error + kd_ang .* ang_vel_error;
 
-% Warn if too much input
-if F > params.maxF
+% Error if too much input
+if F > maxF
     error('Exceeding maximum thrust.');
-elseif F < 0
+elseif F < minF
     error('Commanding negative thrust.');
+elseif any([phi_des theta_des] < maxangle)
+    error('Exceeded Maximum Angle');
 end
 % =================== Your code ends here ===================
 

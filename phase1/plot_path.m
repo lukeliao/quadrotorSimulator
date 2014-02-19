@@ -7,15 +7,9 @@ figure(2)
 xlim(map.boundary_dim([1 4]));
 ylim(map.boundary_dim([2 5]));
 zlim(map.boundary_dim([3 6]));
-marg = map.margin;
 hold on
 for i = 1:length(map.block_dim(:,1))
-% i = 1;  
-
-b = map.block_dim(i,:);
-%     x = [b(1) b(4)] + [marg -marg];
-%     y = [b(2) b(5)] + [marg -marg];
-%     z = [b(3) b(6)] + [marg -marg];
+    b = map.block_dim(i,:);
     x = [b(1) b(4)];
     y = [b(2) b(5)];
     z = [b(3) b(6)];
@@ -32,9 +26,12 @@ b = map.block_dim(i,:);
              1 2 6 5; 3 4 8 7;
              1 3 7 5; 2 4 8 6];
    patch('Faces',faces,'Vertices',verts,'FaceColor',col./255);  
-%    hold on;
 end
 
-plot3(path(:,1), path(:,2), path(:,3), 'g-');
+if ~isempty(path)
+    plot3(path(:,1), path(:,2), path(:,3), 'g-');
+else
+    warning('The path was empty.');
+end
 hold off;
 end
