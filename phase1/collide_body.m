@@ -18,7 +18,5 @@ for i = 1:length(map.block_dim(:,1))
     C = bsxfun(@or, C, block_result);
 end
 
-if any(C)
-    keyboard
-end
+
     

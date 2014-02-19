@@ -36,7 +36,7 @@ legend('x','y','z');
 grid on;
 
 subplot(2,2,4);
-plot3(pos_v(:,1), pos_v(:,2), pos_v(:,3))
+plot3(pos_v(:,1), pos_v(:,2), pos_v(:,3), 'r-')
 title('Trajectory');
 xlabel('x');
 ylabel('y');

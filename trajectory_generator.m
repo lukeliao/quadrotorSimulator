@@ -44,7 +44,9 @@ if isempty(t)
                 dt = norm(path_mod(s,:) - path_mod(s-1,:))/avg_speed_temp;
                 % Figure out coefficients (cell array with matrix for each
                 % dim)
-                coeffs{qn}{s-1} = get_coefficients(path_mod(s-1,:), path_mod(s,:), dt);
+                s1 = {path_mod(s-1,:), [0 0 0], [0 0 0]};
+                s2 = {path_mod(s,:), [0 0 0], [0 0 0]};
+                coeffs{qn}{s-1} = get_coefficients(s1, s2, dt);
                 % Map of times to decide which leg we're on
                 time_vec(s) = time_vec(s-1) + dt;
                 max_a = get_max_acc(coeffs{qn}{s-1}, dt);
@@ -54,8 +56,13 @@ if isempty(t)
                 else
                     break;
                 end
-            end  
+            end
         end
+        % Smooth corners
+        new_path = stitch_traj(coeffs{qn}, time_vec);
+        coeffs{qn} = new_path.coeffs;
+        time_vec = new_path.tvec;
+        % Save time for later
         choose_time{qn} = time_vec;
     end    
 
@@ -102,6 +109,55 @@ end
 max_a = max(rownorm(acc'));
 end
 
+function new_path = stitch_traj(coeffs, tvec)
+    % Get all states that we want to capture
+    all_states = {coeffs_to_state(coeffs{1}, 0)};
+    all_times = tvec(1);
+    dtvec = diff(tvec);
+    t_acc = 1.5; % Time of transitory parts
+    for i = 1:length(tvec)-2
+        % Make sure we don't fillet more than half of the length
+        if min(dtvec(i), dtvec(i+1)) < t_acc
+            dt = min(dtvec(i), dtvec(i+1))/2;
+        else
+            dt = t_acc/2;
+        end
+        % Find new states
+        s1 = coeffs_to_state(coeffs{i}, dtvec(i)-dt);
+        s2 = coeffs_to_state(coeffs{i+1}, dt);
+        % Get two new states and times (Note end time is longer than
+        % initially)
+        all_times = [all_times, tvec(i+1)-dt, tvec(i+1)];
+        all_states{end+1} = s1;
+        all_states{end+1} = s2;
+    end
+    all_states{end+1} = coeffs_to_state(coeffs{end}, dtvec(end));
+    all_times(end+1) = tvec(end);
+    % Convert all states to coefficients
+    all_coeffs = {};
+    for i = 1:length(all_states)-1
+        all_coeffs{i} = get_coefficients(all_states{i}, all_states{i+1}, diff(all_times(i:i+1)));
+    end
+
+    new_path.coeffs = all_coeffs;
+    new_path.tvec = all_times;
+end
+
+function state = coeffs_to_state(coeffs, dt)
+    pos = zeros(1,3);
+    vel = zeros(1,3);
+    acc = zeros(1,3);
+    for d = 1:3
+       p = coeffs{d};
+       v = polyder(p);
+       a = polyder(v);
+       pos(d) = polyval(p, dt);
+       vel(d) = polyval(v, dt);
+       acc(d) = polyval(a, dt);
+    end
+    state = {pos, vel, acc};
+end
+
 function n = rownorm(v)
 n = sqrt(sum(v.^2,2));
 end
@@ -111,8 +167,8 @@ function coeffs = get_coefficients(a, b, dt)
     coeffs = cell(3,1);
     A = [zeros(1,5) 1; dt.^(5:-1:0); zeros(1,4) 1 0; (5:-1:0).*dt.^(4:-1:-1); ...
          0 0 0 2 0 0; 20*dt^3 12*dt^2 6*dt 2 0 0 ];
-    for d = 1:3
-       S = [a(d) b(d) 0 0 0 0]';
+     for d = 1:3
+       S = [a{1}(d) b{1}(d) a{2}(d) b{2}(d) a{3}(d) b{3}(d)]';
        coeffs{d} =  A\S;
     end
 end
@@ -136,6 +192,6 @@ function cond_traj = condense_traj(map, path)
         end
         npoints = npoints + 5;
     end
-     plot3(cond_traj(:,1), cond_traj(:,2), cond_traj(:,3), 'c-')
+%      plot3(cond_traj(:,1), cond_traj(:,2), cond_traj(:,3), 'c-')
 
 end

@@ -6,7 +6,7 @@ addpath(genpath('./'));
 %% Plan path
 disp('Planning ...');
 
-nmap = 1;
+nmap = 3;
 
 switch nmap
     case 0
@@ -22,7 +22,7 @@ switch nmap
         start = {[10,10,0.5]};
         stop  = {[4, 25, 3]};
     case 3
-        map = load_map('maps/map3.txt', 0.1, 2.0, 0);
+        map = load_map('maps/map3.txt', 0.1, 2.0, 0.25);
         start = {[18,3,5]};
         stop  = {[6, 4, 5]};
     case 4
