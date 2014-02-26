@@ -7,6 +7,8 @@ function [xtraj, ttraj, terminate_cond] = test_trajectory(start, stop, map, path
 % path  - n x 3 matrix path planned by your dijkstra algorithm
 % vis   - true for displaying visualization
 
+show_plot = 1;
+
 %Controller and trajectory generator handles
 controlhandle = @controller;
 trajhandle    = @trajectory_generator;
@@ -29,6 +31,7 @@ end
 params = nanoplus();
 
 %% **************************** FIGURES *****************************
+%{
 % Environment figure
 if nargin < 5
     vis = true;
@@ -48,8 +51,9 @@ end
 h_3d = gca;
 drawnow;
 xlabel('x [m]'); ylabel('y [m]'); zlabel('z [m]')
+%}
 quadcolors = lines(nquad);
-set(gcf,'Renderer','OpenGL')
+% set(gcf,'Renderer','OpenGL')
 
 %% *********************** INITIAL CONDITIONS ***********************
 fprintf('Setting initial conditions...\n')
@@ -59,7 +63,7 @@ starttime = 0;          % start of simulation in seconds
 % tstep     = 0.1; %0.01       % this determines the time step at which the solution is given
 % cstep     = 0.5; %0.05      % image capture time interval
 tstep     = 0.01;       % this determines the time step at which the solution is given
-cstep     = 0.05;      % image capture time interval
+cstep     = 0.04;      % image capture time interval
 nstep     = cstep/tstep;
 time      = starttime;  % current time
 max_iter  = time_tol / cstep;      % max iteration
@@ -86,10 +90,10 @@ for iter = 1:max_iter
     for qn = 1:nquad
         % Initialize quad plot
         if iter == 1
-            QP{qn} = QuadPlot(qn, x0{qn}, 0.1, 0.04, quadcolors(qn,:), max_iter, h_3d);
+            QP{qn} = QuadPlot_mod(qn, x0{qn}, 0.5, 0.04, quadcolors(qn,:), max_iter);
             desired_state = trajhandle(time, qn);
-            QP{qn}.UpdateQuadPlot(x{qn}, [desired_state.pos; desired_state.vel], time);
-            h_title = title(sprintf('iteration: %d, time: %4.2f', iter, time));
+            QP{qn}.UpdateQuadPlot_mod(x{qn}, [desired_state.pos; desired_state.vel], time);
+%             h_title = title(sprintf('iteration: %d, time: %4.2f', iter, time));
         end
         
         % Run simulation
@@ -101,20 +105,23 @@ for iter = 1:max_iter
 
         % Update quad plot
         desired_state = trajhandle(time + cstep, qn);
-        QP{qn}.UpdateQuadPlot(x{qn}, [desired_state.pos; desired_state.vel], time + cstep);
+        QP{qn}.UpdateQuadPlot_mod(x{qn}, [desired_state.pos; desired_state.vel], time + cstep);
         % Check for collision
         if collide_body(map, x{qn}(1:3)')
             fprintf('Collision at %f, %f, %f \n', x{qn}(1), x{qn}(2), x{qn}(3))
         end
     end
 
-    set(h_title, 'String', sprintf('iteration: %d, time: %4.2f', iter, time + cstep))
+%     set(h_title, 'String', sprintf('iteration: %d, time: %4.2f', iter, time + cstep))
     time = time + cstep; % Update simulation time
     t = toc;
 
     % Pause to make real-time
     if (t < cstep)
         pause(cstep - t);
+    end
+    if show_plot == 1
+        animate_frame;
     end
 
     % Check termination criteria
@@ -129,6 +136,7 @@ fprintf('Simulation Finished....\n')
 
 %% ************************* POST PROCESSING *************************
 % Truncate xtraj and ttraj
+%{
 for qn = 1:nquad
     xtraj{qn} = xtraj{qn}(1:iter*nstep,:);
     ttraj{qn} = ttraj{qn}(1:iter*nstep);
@@ -149,4 +157,5 @@ if vis
         plot_state(h_vel{qn}, QP{qn}.state_des_hist(4:6,:), QP{qn}.time_hist, 'vel', 'des');
     end
 end
+%}
 end

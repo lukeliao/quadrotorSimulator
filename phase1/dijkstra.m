@@ -19,24 +19,38 @@ if nargin < 4
 end
 
 % Show real-time animation
-show_plot = 0;
+show_plot = 1;
 
-if show_plot
-    figure(5);
-    plot3(start(1), start(2), start(3), 'go');
-    grid on;
-    hold on;
-    plot3(goal(1), goal(2), goal(3),'ro');
-    xlim(map.boundary_dim([1 4]));
-    ylim(map.boundary_dim([2 5]));
-    zlim(map.boundary_dim([3 6]));
-    plot_obstacles(map);
-end
+% Greedy instead of astar
+use_greedy = 1;
 
 % Pull out necessary information
+boundary = map.boundary_dim;
 xy_res = map.xy_res;
 z_res = map.z_res;
 body_buffer = map.body_buffer;
+
+if show_plot
+    animate_frame;
+    plot3(start(1), start(2), start(3), 'g.','MarkerSize',20);    
+    plot3(goal(1), goal(2), goal(3),'b.','MarkerSize',20);
+    xlim(map.boundary_dim([1 4]));
+    ylim(map.boundary_dim([2 5]));
+    zlim(map.boundary_dim([3 6]));
+    plot_obstacles(map);       
+    boxh = []; % handles of explored node boxes
+
+    % Wait for a few seconds before continuing
+    for i = 1:25
+        pause(1/25);
+        animate_frame;
+    end
+    grid_lines = plot_3d_grid(xy_res, z_res, boundary);
+    for i = 1:25
+        pause(1/25);
+        animate_frame;
+    end
+end
 
 % Calculate 'goal box'
 goal_min = goal - [xy_res xy_res z_res];
@@ -77,12 +91,17 @@ num_expanded = 0;
 
 % Search
 while true
+    
+
 
    % Determine nodes 'in consideration'
    incons = bsxfun(@plus, current, dp);
    inconsi = bsxfun(@plus, ci, dpi);
    % Consider each point, and proceed accordingly
    for j = 1:size(inconsi,1)
+        if show_plot
+         animate_frame;
+        end
        % Extract point information
        point = incons(j,:);
        pidx  = inconsi(j,:);
@@ -122,7 +141,7 @@ while true
            isNeighbor(pidx(1), pidx(2), pidx(3)) = tent_cost;
        else
            % If using A*
-           hueristic = tent_cost + est_dist(pidx, goali, res);
+           hueristic = (use_greedy ~= 1)*tent_cost + est_dist(pidx, goali, res);
            % Figure out where to put it in the neighbor list
            idx = find(hueristic <= neighbors(:,8), 1, 'first');
            if isempty(idx)
@@ -143,8 +162,9 @@ while true
        num_expanded = num_expanded + 1;
        % Plot expanded point, if desired
        if show_plot
-           plot3(point(1), point(2), point(3), 'b.');
-           drawnow;
+%            plot3([current(1) point(1)], [current(2) point(2)], [current(3) point(3)], 'b.-');
+            boxh(end+1) = plot_box(point, xy_res, z_res);
+            drawnow;
        end
    end
       
@@ -170,7 +190,7 @@ while true
    
    % Plot, if desired
    if show_plot
-       plot3(current(1), current(2), current(3), 'yo');
+%        plot3(current(1), current(2), current(3), 'yo');
        drawnow;
    end
       
@@ -197,7 +217,52 @@ while ~all(almostEqual(start, current))
 end  
 
 % Add start and end
-path = [start; path; goal];    
+path = [start; path; goal];   
+
+if show_plot
+     ph = plot3(path(:,1), path(:,2), path(:,3), 'g-');
+    for i = 1:length(grid_lines)
+        delete(grid_lines(i));
+    end 
+    for i = 1:50
+        pause(1/25);
+        animate_frame;
+    end
+    for i = 1:length(boxh)
+        delete(boxh(i));
+    end
+    for i = 1:50
+        pause(1/25);
+        animate_frame;
+    end  
+    delete(ph)
+end
+end
+
+function grid_lines = plot_3d_grid(xy_res, z_res, boundary)
+% build vectors
+xv = boundary(1)+xy_res/2:xy_res:boundary(4)-xy_res/2;
+yv = boundary(2)+xy_res/2:xy_res:boundary(5)-xy_res/2;
+zv = boundary(3)+xy_res/2:z_res:boundary(6)-z_res/2;
+grid_lines = [];
+% Plot vertical lines
+for xi = min(xv):xy_res:max(xv)
+    for yi = min(yv):xy_res:max(yv)
+        grid_lines(end+1) = plot3([xi xi], [yi yi], [min(zv) max(zv)], '--','color',[0.8 0.8 0.8]);
+    end
+end
+% Horizontal
+for yi = min(yv):xy_res:max(yv)
+    for zi = min(zv):z_res:max(zv)
+        grid_lines(end+1) = plot3([min(xv) max(xv)], [yi yi], [zi zi], '--','color',[0.8 0.8 0.8]);
+    end
+end
+% Last dim
+for  xi = min(xv):xy_res:max(xv)
+    for zi = min(zv):z_res:max(zv)
+        grid_lines(end+1) = plot3([xi xi], [min(yv) max(yv)], [zi zi], '--','color',[0.8 0.8 0.8]);
+    end
+end
 end
 
 function col_map = create_collision_map(map, dims, offsets, res, min_m, max_i, body_buffer)
@@ -260,10 +325,32 @@ end
 
 function estimate = est_dist(point, goal, res)
     estimate = sum(single(abs(point-goal)).*res);    
+%     estimate = norm(single(point-goal).*res);
 end
 
 function v = almostEqual(a,b)
     v = (abs(a-b) < 1e-4);
+end
+
+function boxh = plot_box(point, xy_res, z_res)
+x = [point(1)-xy_res/2 point(1)+xy_res/2];
+y = [point(2)-xy_res/2 point(2)+xy_res/2];
+z = [point(3)-z_res/2 point(3)+z_res/2];
+verts = [];
+for xi = 1:2
+    for yi = 1:2
+        for zi = 1:2
+            verts(end+1, 1:3) = [x(xi) y(yi) z(zi)];
+        end
+    end
+end
+faces = [1 3 4 2; 5 6 8 7;
+         1 2 6 5; 3 4 8 7;
+         1 3 7 5; 2 4 8 6];
+ col = [184 234 242];
+ edgecol = [122 122 122];
+ boxh = patch('Faces',faces,'Vertices',verts,'FaceColor',col./255,...
+        'EdgeColor',edgecol./255,'FaceAlpha',0.2,'EdgeAlpha', 0.6);  
 end
 
 function plot_obstacles(map)
@@ -285,7 +372,8 @@ for i = 1:length(map.block_dim(:,1))
     faces = [1 3 4 2; 5 6 8 7;
              1 2 6 5; 3 4 8 7;
              1 3 7 5; 2 4 8 6];
-   patch('Faces',faces,'Vertices',verts,'FaceColor',col./255);  
+   patch('Faces',faces,'Vertices',verts,'FaceColor',col./255,...
+          'EdgeColor',col./255,'FaceAlpha',0.35, 'EdgeAlpha',0.7);  
 %    hold on;
 end
 end

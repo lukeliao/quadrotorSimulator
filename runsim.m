@@ -2,11 +2,12 @@ close all;
 clear all;
 clc;
 addpath(genpath('./'));
+show_plot = 1;
 
 %% Plan path
 disp('Planning ...');
 
-nmap = 1;
+nmap = 5;
 
 switch nmap
     case 0
@@ -29,6 +30,11 @@ switch nmap
         map = load_map('maps/mymap.txt', 0.1, 2.0, 0);
         start = {[7 5 5]};
         stop  = {[5 5 2]};
+    case 5
+        % Good for animating
+        map = load_map('maps/map1_mod.txt', 1, 1, 0);
+        start = {[1  -4 0]};
+        stop  = {[6.0  18 2.5]};
 end
 
 
@@ -36,8 +42,9 @@ nquad = length(start);
 for qn = 1:nquad
     path{qn} = dijkstra(map, start{qn}, stop{qn}, true);
 end
+%%
 if nquad == 1
-    plot_path(map, path{1});
+%     plot_path(map, path{1});
 else
     % you could modify your plot_path to handle cell input for multiple robots
 end
@@ -45,7 +52,16 @@ end
 % %% Additional init script
 hold on;
 init_script;
-hold off;
+% hold off;
 % %% Run trajectory
-trajectory = test_trajectory(start, stop, map, path, true); % with visualization
-% testtraj;
+% trajectory = test_trajectory(start, stop, map, path, true); % with visualization
+% tf = trajectory_generator()
+testtraj(tf);
+if show_plot == 1
+        for i = 1:25
+        pause(1/25);
+        animate_frame;
+        end
+end
+trajectory = test_trajectory(start, stop, map, path, true);
+animate_frame(1); % close
