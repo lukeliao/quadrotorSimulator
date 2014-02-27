@@ -1,5 +1,9 @@
 function animate_frame(close_and_save)
 
+% This function creates a videowriter and adds a frame every time it's
+% called.
+% It also sets and rotates the perspective, which has been hardcoded
+
 persistent first_run tcount tvect rc zc writerObj
 
 if isempty(first_run)
@@ -40,7 +44,9 @@ if first_run
     filename = datestr(now,'mm-dd_HH:MM:SS');
     writerObj = VideoWriter(filename);
     writerObj.FrameRate = 25;
+        writerObj.Quality = 100;
     open(writerObj);
+
 else
     tcount = min(tcount + 1, length(tvect));
     xc = rc * cos(tvect(tcount));

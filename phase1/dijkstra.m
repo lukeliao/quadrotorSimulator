@@ -1,4 +1,4 @@
-function [path, num_expanded] = dijkstra(map, start, goal, astar)
+function [path, num_expanded] = dijkstra(map, start, goal, astar, show_plot)
 % DIJKSTRA Find the shortest path from start to goal.
 %   PATH = DIJKSTRA(map, start, goal) returns an M-by-3 matrix, where each row
 %   consists of the (x, y, z) coordinates of a point on the path.  The first
@@ -18,8 +18,6 @@ if nargin < 4
     astar = false;
 end
 
-% Show real-time animation
-show_plot = 1;
 
 % Greedy instead of astar
 use_greedy = 1;
